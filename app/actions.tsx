@@ -3,7 +3,14 @@
 import { createClient } from "@/lib/supabase/server"
 import { Resend } from "resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Initialize Resend lazily to avoid build errors when RESEND_API_KEY is not set
+const getResend = () => {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) {
+    throw new Error("RESEND_API_KEY is not set")
+  }
+  return new Resend(apiKey)
+}
 
 export async function getWelcomeEmailHTML(email: string) {
   return `
@@ -120,7 +127,7 @@ export async function addToWaitlist(email: string) {
     }
 
     try {
-      await resend.emails.send({
+      await getResend().emails.send({
         from: "Seats <hello@seatsbookings.com>",
         to: email,
         subject: "Welcome to Seats - You're on the list! 🎉",
