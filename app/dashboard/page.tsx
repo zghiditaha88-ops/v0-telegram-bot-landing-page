@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AddWatchForm } from '@/components/AddWatchForm'
 import { DeleteWatchButton } from '@/components/DeleteWatchButton'
 
+// Force dynamic rendering (SSR) - required for Prisma database queries
+export const dynamic = 'force-dynamic'
+
 // TODO: Replace with real authentication (Telegram or email magic link)
 function getMockUserId(): string {
   // In a real implementation, read from cookies or headers
