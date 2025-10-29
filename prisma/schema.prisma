@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Use SUPABASE_POSTGRES_PRISMA_URL if available (for Supabase), otherwise DATABASE_URL
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  email       String?  @unique
+  telegramId  BigInt?  @unique
+  plan        String   @default("free")
+  watches     Watch[]
+  alerts      Alert[]
+  clicks      Click[]
+  claims      Claim[]
+
+  @@map("users")
+}
+
+model Watch {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  venueSlug  String
+  partySize  Int
+  startDate  DateTime
+  endDate    DateTime
+  slot       String   // "morning" | "afternoon" | "evening" | "all"
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@map("watches")
+}
+
+model Drop {
+  id         String   @id @default(uuid())
+  venueSlug  String
+  partySize  Int
+  date       DateTime
+  times      Json
+  detectedAt DateTime @default(now())
+  alerts     Alert[]
+
+  @@unique([venueSlug, partySize, date])
+  @@index([detectedAt])
+  @@map("drops")
+}
+
+model Alert {
+  id       String   @id @default(uuid())
+  dropId   String
+  drop     Drop     @relation(fields: [dropId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  times    Json
+  sentAt   DateTime @default(now())
+
+  @@index([userId, sentAt])
+  @@map("alerts")
+}
+
+model Claim {
+  id        String   @id @default(uuid())
+  slotKey   String   @unique // slug|party|date|time
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("claims")
+}
+
+model Click {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slotKey   String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("clicks")
+}
+
